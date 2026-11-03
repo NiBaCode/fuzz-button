@@ -3,6 +3,7 @@
   One file, no libraries, WebGL2.
 
   <fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" width="320" height="110" fuzz="1"></fuzz-button>
+  Add shed="1" and every press costs it some hair; it grows back when you leave it alone.
 
   Listen to it like any button: el.addEventListener("click", ...)
   For scripted demos: el.press(x, y), el.release(), with x and y measured from the centre of the button.
@@ -10,7 +11,7 @@
 (() => {
   const PAD = 72;              // room around the button for stray hairs and shed tufts
   const SEGMENTS = 5;          // each hair is a strip of this many sections
-  const MAX_TUFTS = 48;
+  const MAX_TUFTS = 90;
   const MAX_RIPPLES = 4;
 
   const HAIR_VS = `#version 300 es
@@ -19,7 +20,7 @@
   layout(location = 1) in vec2 aLean;
   layout(location = 2) in vec3 aInfo;   // x: height on the cushion, y: random, z: 1 inside the letters
   uniform vec2 uView, uHalf, uPressAt, uCursor, uDrag;
-  uniform float uLen, uWidth, uPress, uHover, uTime, uBreeze;
+  uniform float uLen, uWidth, uPress, uHover, uTime, uBreeze, uBald;
   uniform vec4 uRipples[${MAX_RIPPLES}];
   uniform vec3 uDeep, uBody, uTip, uInk;
   out vec3 vColor;
@@ -65,6 +66,12 @@
       reach *= 1.0 + 0.35 * band;
     }
 
+    // Worn patches: each hair has its own moment to go, grouped so the bald spots look natural
+    float patch_ = 0.5 + 0.5 * sin(aRoot.x * 0.06 + 1.7) * cos(aRoot.y * 0.09 - 0.6);
+    float keep = mix(fract(seed * 5.7), patch_, 0.45);
+    float growth = smoothstep(uBald * 1.2 - 0.14, uBald * 1.2, keep);
+    reach *= mix(0.13, 1.0, growth);     // bald still leaves stubble, so the surface and the letters stay readable
+
     // Slow air, so the button is never completely still
     float air = sin(aRoot.x * 0.021 + uTime * 1.25 + seed * 5.0) * 0.1 + sin(aRoot.y * 0.034 - uTime * 0.85) * 0.07;
     sweep += vec2(air, air * 0.55) * uBreeze;
@@ -73,7 +80,7 @@
 
     vec2 here = aRoot + pointAt(t);
     vec2 along = normalize(pointAt(t + 0.03) - pointAt(t - 0.03) + vec2(1e-4));
-    float width = uWidth * (1.0 - t * t * 0.86) * (0.72 + 0.56 * fract(seed * 13.7));
+    float width = uWidth * (1.0 - t * t * 0.86) * (0.72 + 0.56 * fract(seed * 13.7)) * mix(0.72, 1.0, growth);
     vec2 pos = here + vec2(-along.y, along.x) * side * width;
 
     // Colour: dark at the root, dyed along its length, catching the light at the tip
@@ -103,7 +110,7 @@
     float size = smoothstep(0.0, 0.3, aTuft.w);
     vec2 axis = vec2(cos(aTuft.z), sin(aTuft.z));
     vec2 across = vec2(-axis.y, axis.x);
-    vec2 local = axis * (t - 0.5) * 15.0 * size + across * (sin(t * 3.1416) * 2.6 + side * 0.85 * (1.0 - t * 0.7) * size);
+    vec2 local = axis * (t - 0.5) * 24.0 * size + across * (sin(t * 3.1416) * 4.0 + side * 1.5 * (1.0 - t * 0.7) * size);
     vec2 pos = aTuft.xy + local;
     gl_Position = vec4(pos.x / (uView.x * 0.5), -pos.y / (uView.y * 0.5), 0.0, 1.0);
     vColor = uColor * (0.8 + 0.3 * t);
@@ -148,7 +155,7 @@
   const uniforms = (gl, p, names) => Object.fromEntries(names.map(n => [n, gl.getUniformLocation(p, n)]));
 
   class FuzzButton extends HTMLElement {
-    static observedAttributes = ["label", "color", "text-color", "fuzz"];
+    static observedAttributes = ["label", "color", "text-color", "fuzz", "shed"];
 
     connectedCallback() {
       this.calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -219,7 +226,7 @@
       this.gl = gl;
       this.hair = program(gl, HAIR_VS, FLAT_FS);
       this.tuft = program(gl, TUFT_VS, FLAT_FS);
-      this.hairU = uniforms(gl, this.hair, ["uView", "uHalf", "uPressAt", "uCursor", "uDrag", "uLen", "uWidth", "uPress", "uHover", "uTime", "uBreeze", "uDeep", "uBody", "uTip", "uInk", "uRipples"]);
+      this.hairU = uniforms(gl, this.hair, ["uView", "uHalf", "uPressAt", "uCursor", "uDrag", "uLen", "uWidth", "uPress", "uHover", "uTime", "uBreeze", "uBald", "uDeep", "uBody", "uTip", "uInk", "uRipples"]);
       this.tuftU = uniforms(gl, this.tuft, ["uView", "uColor"]);
 
       this.hairVao = gl.createVertexArray();
@@ -254,6 +261,7 @@
       this.tuftData = new Float32Array(MAX_TUFTS * 4);
       this.time = 0; this.last = 0; this.slow = 0; this.frames = 0;
       this.quality = 1;
+      this.bald = 0; this.restless = 0;
       this.grow();
       this.setAttribute("data-fur", "");
       this.wake();
@@ -379,7 +387,7 @@
       this.pressAt = [x, y];
       this.pointer = [x, y];
       this.pressTarget = 1;
-      this.shed(x, y, 7);
+      this.shedHair(x, y, this.sheds() ? 10 : 8);
       this.wake();
     }
 
@@ -388,12 +396,15 @@
       this.pressTarget = 0;
       const slot = this.ripples[this.rippleNext++ % MAX_RIPPLES];
       slot[0] = this.pressAt[0]; slot[1] = this.pressAt[1]; slot[2] = 0;
-      this.shed(this.pressAt[0], this.pressAt[1], 13);
+      this.shedHair(this.pressAt[0], this.pressAt[1], this.sheds() ? 20 : 15);
+      if (this.sheds()) { this.bald = Math.min(1, this.bald + 0.11); this.restless = 0; }
       this.wake();
     }
 
+    sheds() { return this.hasAttribute("shed") && this.getAttribute("shed") !== "0"; }
+
     // A few loose hairs fly off the button
-    shed(x, y, amount) {
+    shedHair(x, y, amount) {
       if (this.calm) return;
       for (let i = 0; i < amount && this.tufts.length < MAX_TUFTS; i++) {
         const a = Math.random() * Math.PI * 2;
@@ -402,7 +413,7 @@
           x: x + Math.cos(a) * 22, y: y + Math.sin(a) * 14,
           vx: Math.cos(a) * speed, vy: Math.sin(a) * speed - 130,
           angle: Math.random() * 6.28, spin: (Math.random() - 0.5) * 10,
-          life: 1, fade: 1.1 + Math.random() * 0.9,
+          life: 1, fade: 0.75 + Math.random() * 0.6,
         });
       }
     }
@@ -442,6 +453,11 @@
         return t.life > 0;
       });
 
+      // Left alone, the coat grows back
+      this.restless += dt;
+      if (!this.sheds()) this.bald = 0;
+      else if (this.restless > 1.3) this.bald = Math.max(0, this.bald - dt * 0.24);
+
       const p = this.press_;
       this.body.style.transform = `translateY(${(p * 3).toFixed(2)}px) scale(${(1 + p * 0.05).toFixed(4)}, ${(1 - p * 0.1).toFixed(4)})`;
     }
@@ -462,6 +478,7 @@
       gl.uniform1f(u.uHover, this.hover);
       gl.uniform1f(u.uTime, this.time);
       gl.uniform1f(u.uBreeze, this.calm ? 0 : 1);
+      gl.uniform1f(u.uBald, this.bald);
       gl.uniform3fv(u.uDeep, c.deep);
       gl.uniform3fv(u.uBody, c.body);
       gl.uniform3fv(u.uTip, c.tip);
@@ -476,7 +493,7 @@
         this.tufts.forEach((f, i) => this.tuftData.set([f.x, f.y, f.angle, f.life], i * 4));
         gl.useProgram(this.tuft);
         gl.uniform2f(t.uView, this.view[0], this.view[1]);
-        gl.uniform3fv(t.uColor, c.tip);
+        gl.uniform3fv(t.uColor, c.body);
         gl.bindVertexArray(this.tuftVao);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.tuftBuf);
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.tuftData.subarray(0, this.tufts.length * 4));
@@ -507,7 +524,7 @@
       for (let i = 0; i < steps; i++) this.step(dt / steps);
       this.draw();
 
-      const settled = Math.abs(this.pressVel) < 0.01 && Math.abs(this.press_ - this.pressTarget) < 0.002 && !this.tufts.length && this.ripples.every(r => r[2] < 0) && this.hover < 0.01;
+      const settled = Math.abs(this.pressVel) < 0.01 && Math.abs(this.press_ - this.pressTarget) < 0.002 && !this.tufts.length && this.ripples.every(r => r[2] < 0) && this.hover < 0.01 && this.bald < 0.001;
       if (this.calm && settled) return;
       this.raf = requestAnimationFrame(t => this.frame(t));
     }

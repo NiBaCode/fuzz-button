@@ -37,6 +37,8 @@
   input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
   input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
   input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
+  .toggle { display: flex; align-items: center; gap: 12px; min-height: 44px; font-weight: 500; cursor: pointer; }
+  .toggle input { width: 24px; height: 24px; margin: 0; accent-color: var(--yellow); }
   input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--yellow); }
 
   .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
@@ -97,6 +99,8 @@
       <label for="fuzz">Fur length</label>
       <input id="fuzz" type="range" min="0.5" max="2" step="0.05" value="1">
     </div>
+
+    <label class="toggle"><input id="shed" type="checkbox"> Goes bald when pressed</label>
   </form>
 
   <div class="actions">
@@ -123,13 +127,14 @@
 
   <h2>Good to know</h2>
   <p>It works like a normal button: click, keyboard and touch. Listen for <code>click</code> as usual.</p>
+  <p>Turn on <strong>Goes bald</strong> and every press costs it some hair. Leave it alone and the coat grows back.</p>
   <p>It needs WebGL2. Without it, you get a plain button. Slow devices get a thinner coat automatically.</p>
   <p>Free for your own and your clients' projects. Please don't resell it as it is. <a href="LICENSE">License</a></p>
 
   <footer>Made by The Notorious RGB. <a href="https://www.instagram.com/thenotorious.rgb/">Follow for the next one</a></footer>
 </main>
 
-<script src="fuzz-button.js?v=2"></script>
+<script src="fuzz-button.js?v=3"></script>
 <script>
   const demo = document.getElementById("demo");
   const form = document.getElementById("controls");
@@ -140,13 +145,15 @@
 
   function tag() {
     const a = n => demo.getAttribute(n);
-    return `<fuzz-button label="${attr(a("label"))}" color="${a("color")}" text-color="${a("text-color")}" fuzz="${a("fuzz")}"></fuzz-button>`;
+    return `<fuzz-button label="${attr(a("label"))}" color="${a("color")}" text-color="${a("text-color")}" fuzz="${a("fuzz")}"${demo.hasAttribute("shed") ? ' shed="1"' : ""}></fuzz-button>`;
   }
 
   function show() { field("tag").textContent = tag(); }
 
   field("label").addEventListener("input", e => { demo.setAttribute("label", e.target.value.trim() || "Get started"); show(); });
   field("fuzz").addEventListener("input", e => { demo.setAttribute("fuzz", e.target.value); show(); });
+
+  field("shed").addEventListener("change", e => { demo.toggleAttribute("shed", e.target.checked); if (e.target.checked) demo.setAttribute("shed", "1"); show(); });
 
   function pick(name, customId, attribute) {
     form.querySelectorAll(`input[name="${name}"]`).forEach(radio => radio.addEventListener("change", () => {
@@ -164,7 +171,7 @@
   pick("ink", "ink-custom", "text-color");
   show();
 
-  const script = () => fetch("fuzz-button.js?v=2").then(r => r.text());
+  const script = () => fetch("fuzz-button.js?v=3").then(r => r.text());
 
   function flash(button, text, rest) {
     button.textContent = text;

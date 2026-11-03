@@ -9,6 +9,8 @@ A real HTML button covered in hair. Press it and the pile flattens, release it a
 <script src="fuzz-button.js"></script>
 ```
 
+Add `shed="1"` and every press costs it some hair. Leave it alone and the coat grows back.
+
 It behaves like a normal button: click, keyboard and touch all work. Without WebGL2 it falls back to a plain button.
 
 Free for your own and your clients' projects. Please don't resell it as it is: see [LICENSE](LICENSE).
