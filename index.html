@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuzz Button · The Notorious RGB</title>
+<meta name="description" content="A real HTML button covered in hair. One file, no libraries. Free to use.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --void: #090A0C; --bone: #EEE9DF; --silver: #9A9A9A; --yellow: #FFB000; }
+  * { box-sizing: border-box; }
+  html { background: var(--void); color-scheme: dark; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--bone); background: var(--void); overflow-x: clip;
+    font: 400 17px/1.5 "Space Grotesk", system-ui, sans-serif;
+  }
+  main { max-width: 620px; margin: 0 auto; padding: 0 20px; }
+  .stage { display: grid; place-items: center; min-height: 340px; padding: 110px 0 90px; }
+  h1 { margin: 0; font-size: clamp(40px, 11vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
+  .lead { margin: 14px 0 28px; color: var(--silver); font-size: 19px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .action {
+    appearance: none; display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 999px;
+    border: 1px solid var(--bone); background: none; color: var(--bone); font: 500 16px "Space Grotesk", system-ui, sans-serif;
+    text-decoration: none; cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .action.main { background: var(--yellow); border-color: var(--yellow); color: var(--void); }
+  .action:hover { background: var(--bone); border-color: var(--bone); color: var(--void); }
+  .action:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+  h2 { margin: 56px 0 10px; font-size: 22px; }
+  pre {
+    margin: 0; padding: 18px; overflow-x: auto; border-radius: 14px; background: #15161A;
+    font: 400 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  p { margin: 0 0 12px; }
+  footer { margin: 72px 0 0; padding: 24px 0 48px; border-top: 1px solid #26272C; color: var(--silver); }
+  a { color: var(--yellow); }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage"><fuzz-button label="Get started"></fuzz-button></div>
+
+  <h1>Fuzz Button</h1>
+  <p class="lead">A real button covered in hair. Press it. One file, no libraries.</p>
+  <div class="actions">
+    <button class="action main" id="copy" type="button">Copy the code</button>
+    <a class="action" href="fuzz-button.html" download>Download the file</a>
+  </div>
+
+  <h2>Use it</h2>
+  <p>Paste the code into any page, then place the tag where you want the button. Change the words, colours and size here:</p>
+  <pre><code>&lt;fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" width="320" height="110"&gt;&lt;/fuzz-button&gt;</code></pre>
+
+  <h2>Good to know</h2>
+  <p>It works like a normal button: click, keyboard and touch. Listen for <code>click</code> as usual.</p>
+  <p>It needs WebGL2. Without it, you get a plain button. Slow devices get a thinner coat automatically.</p>
+  <p>Free for your own and your clients' projects. Please don't resell it as it is. <a href="LICENSE">License</a></p>
+
+  <footer>Made by The Notorious RGB. <a href="https://www.instagram.com/thenotorious.rgb/">Follow for the next one</a></footer>
+</main>
+
+<script src="fuzz-button.js"></script>
+<script>
+  const copy = document.getElementById("copy");
+  copy.addEventListener("click", async () => {
+    try {
+      const code = await (await fetch("fuzz-button.js")).text();
+      const open = "<scr" + "ipt>", close = "</scr" + "ipt>";
+      await navigator.clipboard.writeText(`<fuzz-button label="Get started"></fuzz-button>\n\n${open}\n${code}${close}\n`);
+      copy.textContent = "Copied";
+    } catch {
+      copy.textContent = "Use Download instead";
+    }
+    setTimeout(() => { copy.textContent = "Copy the code"; }, 2200);
+  });
+</script>
+</body>
+</html>
