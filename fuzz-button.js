@@ -2,7 +2,7 @@
   Fuzz Button: a real <button> covered in hair. Press it and the pile flattens, release it and it springs back.
   One file, no libraries, WebGL2.
 
-  <fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" width="320" height="110"></fuzz-button>
+  <fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" width="320" height="110" fuzz="1"></fuzz-button>
 
   Listen to it like any button: el.addEventListener("click", ...)
   For scripted demos: el.press(x, y), el.release(), with x and y measured from the centre of the button.
@@ -148,7 +148,7 @@
   const uniforms = (gl, p, names) => Object.fromEntries(names.map(n => [n, gl.getUniformLocation(p, n)]));
 
   class FuzzButton extends HTMLElement {
-    static observedAttributes = ["label", "color", "text-color", "width", "height"];
+    static observedAttributes = ["label", "color", "text-color", "fuzz"];
 
     connectedCallback() {
       this.calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -169,10 +169,16 @@
       this.watch?.disconnect();
     }
 
-    attributeChangedCallback() {
+    // Colour and length apply on the next frame; only new words need the hairs replanted
+    attributeChangedCallback(name) {
       if (!this.gl) return;
-      if (this.btn) this.btn.setAttribute("aria-label", this.getAttribute("label") || "Button");
-      this.grow();
+      if (name === "label") {
+        this.btn.setAttribute("aria-label", this.getAttribute("label") || "Button");
+        this.textEl.textContent = this.getAttribute("label") || "";
+        this.grow();
+      }
+      if (name === "color" || name === "text-color") this.recolor();
+      this.wake();
     }
 
     renderShell() {
@@ -266,7 +272,7 @@
     grow() {
       const gl = this.gl;
       if (!gl) return;
-      this.paint();
+      this.recolor();
       const { w, h } = this;
       const r = h / 2, spine = w / 2 - r;
       const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -316,7 +322,10 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, this.hairBuf);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
       this.count = count;
+    }
 
+    recolor() {
+      this.paint();
       const color = hexToRgb(this.getAttribute("color") || "#FFB000");
       this.colors = {
         deep: mixRgb(color, [0, 0, 0], 0.62),
@@ -447,7 +456,7 @@
       gl.uniform2fv(u.uPressAt, this.pressAt);
       gl.uniform2fv(u.uCursor, this.cursor);
       gl.uniform2fv(u.uDrag, this.drag);
-      gl.uniform1f(u.uLen, h * 0.15);
+      gl.uniform1f(u.uLen, h * 0.15 * Math.max(0.3, Math.min(2.5, +this.getAttribute("fuzz") || 1)));
       gl.uniform1f(u.uWidth, Math.max(0.62, h * 0.0072));
       gl.uniform1f(u.uPress, this.press_);
       gl.uniform1f(u.uHover, this.hover);

@@ -4,54 +4,122 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fuzz Button · The Notorious RGB</title>
-<meta name="description" content="A real HTML button covered in hair. One file, no libraries. Free to use.">
+<meta name="description" content="Make your own button covered in hair. Choose the words and colours, copy the code. One file, no libraries.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --void: #090A0C; --bone: #EEE9DF; --silver: #9A9A9A; --yellow: #FFB000; }
+  :root { --void: #090A0C; --panel: #15161A; --line: #2B2C32; --bone: #EEE9DF; --silver: #A3A3A3; --yellow: #FFB000; }
   * { box-sizing: border-box; }
   html { background: var(--void); color-scheme: dark; }
   body {
     margin: 0; min-height: 100vh; color: var(--bone); background: var(--void); overflow-x: clip;
     font: 400 17px/1.5 "Space Grotesk", system-ui, sans-serif;
   }
-  main { max-width: 620px; margin: 0 auto; padding: 0 20px; }
-  .stage { display: grid; place-items: center; min-height: 340px; padding: 110px 0 90px; }
-  h1 { margin: 0; font-size: clamp(40px, 11vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
-  .lead { margin: 14px 0 28px; color: var(--silver); font-size: 19px; }
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  main { max-width: 620px; margin: 0 auto; padding: 36px 20px 0; }
+  h1 { margin: 0; font-size: clamp(38px, 10vw, 60px); line-height: 1.02; letter-spacing: -0.02em; }
+  .lead { margin: 10px 0 0; color: var(--silver); font-size: 19px; }
+  .stage { display: grid; place-items: center; padding: 76px 0 68px; }
+
+  .controls { display: grid; gap: 20px; padding: 20px; border-radius: 18px; background: var(--panel); }
+  .field { display: grid; gap: 8px; min-width: 0; border: 0; margin: 0; padding: 0; }
+  .field > label, .field > legend { padding: 0; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  input[type="text"] {
+    width: 100%; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--void); color: var(--bone); font: 400 17px "Space Grotesk", system-ui, sans-serif;
+  }
+  .swatch { position: relative; display: block; width: 44px; height: 44px; cursor: pointer; }
+  .swatch input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+  .swatch span { display: block; width: 100%; height: 100%; border-radius: 50%; border: 1px solid #fff3; }
+  .swatch input:checked + span { outline: 2px solid var(--bone); outline-offset: 3px; }
+  .swatch input:focus-visible + span { outline: 2px solid var(--yellow); outline-offset: 3px; }
+  input[type="color"] { width: 44px; height: 44px; padding: 3px; border: 2px dashed var(--silver); border-radius: 50%; background: none; cursor: pointer; overflow: hidden; }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+  input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
+  input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--yellow); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
   .action {
     appearance: none; display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 999px;
     border: 1px solid var(--bone); background: none; color: var(--bone); font: 500 16px "Space Grotesk", system-ui, sans-serif;
-    text-decoration: none; cursor: pointer; transition: background .15s ease, color .15s ease;
+    cursor: pointer; transition: background .15s ease, color .15s ease;
   }
   .action.main { background: var(--yellow); border-color: var(--yellow); color: var(--void); }
   .action:hover { background: var(--bone); border-color: var(--bone); color: var(--void); }
-  .action:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
-  h2 { margin: 56px 0 10px; font-size: 22px; }
-  pre {
-    margin: 0; padding: 18px; overflow-x: auto; border-radius: 14px; background: #15161A;
-    font: 400 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  }
+  .action:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
+
+  h2 { margin: 52px 0 10px; font-size: 22px; }
+  h3 { margin: 22px 0 2px; font-size: 17px; }
+  ol { margin: 0; padding-left: 22px; }
+  li { margin-bottom: 6px; }
   p { margin: 0 0 12px; }
-  footer { margin: 72px 0 0; padding: 24px 0 48px; border-top: 1px solid #26272C; color: var(--silver); }
+  code { font: 400 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  pre { margin: 14px 0 0; padding: 16px; overflow-x: auto; border-radius: 14px; background: var(--panel); }
+  footer { margin: 64px 0 0; padding: 24px 0 48px; border-top: 1px solid var(--line); color: var(--silver); }
   a { color: var(--yellow); }
 </style>
 </head>
 <body>
 <main>
-  <div class="stage"><fuzz-button label="Get started"></fuzz-button></div>
-
   <h1>Fuzz Button</h1>
-  <p class="lead">A real button covered in hair. Press it. One file, no libraries.</p>
+  <p class="lead">Make your own button covered in hair.</p>
+
+  <div class="stage"><fuzz-button id="demo" label="Get started" color="#FFB000" text-color="#090A0C" fuzz="1"></fuzz-button></div>
+
+  <form class="controls" id="controls" onsubmit="return false">
+    <div class="field">
+      <label for="label">Text</label>
+      <input id="label" type="text" value="Get started" maxlength="20" autocomplete="off">
+    </div>
+
+    <fieldset class="field">
+      <legend>Fur colour</legend>
+      <div class="row" id="fur-colors">
+        <label class="swatch" title="Film Yellow"><input type="radio" name="fur" value="#FFB000" checked aria-label="Yellow"><span style="background:#FFB000"></span></label>
+        <label class="swatch" title="Red"><input type="radio" name="fur" value="#FF003C" aria-label="Red"><span style="background:#FF003C"></span></label>
+        <label class="swatch" title="Blue"><input type="radio" name="fur" value="#2447FF" aria-label="Blue"><span style="background:#2447FF"></span></label>
+        <label class="swatch" title="Bone"><input type="radio" name="fur" value="#EEE9DF" aria-label="Bone"><span style="background:#EEE9DF"></span></label>
+        <input id="fur-custom" type="color" value="#FFB000" aria-label="Pick any fur colour">
+      </div>
+    </fieldset>
+
+    <fieldset class="field">
+      <legend>Text colour</legend>
+      <div class="row">
+        <label class="swatch" title="Black"><input type="radio" name="ink" value="#090A0C" checked aria-label="Black"><span style="background:#090A0C"></span></label>
+        <label class="swatch" title="Bone"><input type="radio" name="ink" value="#EEE9DF" aria-label="Bone"><span style="background:#EEE9DF"></span></label>
+        <input id="ink-custom" type="color" value="#090A0C" aria-label="Pick any text colour">
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label for="fuzz">Fur length</label>
+      <input id="fuzz" type="range" min="0.5" max="2" step="0.05" value="1">
+    </div>
+  </form>
+
   <div class="actions">
     <button class="action main" id="copy" type="button">Copy the code</button>
-    <a class="action" href="fuzz-button.html" download>Download the file</a>
+    <button class="action" id="download" type="button">Download the file</button>
   </div>
 
   <h2>Use it</h2>
-  <p>Paste the code into any page, then place the tag where you want the button. Change the words, colours and size here:</p>
-  <pre><code>&lt;fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" width="320" height="110"&gt;&lt;/fuzz-button&gt;</code></pre>
+  <ol>
+    <li>Choose your text and colours above.</li>
+    <li>Press <strong>Copy the code</strong>.</li>
+    <li>Paste it into your page, before <code>&lt;/body&gt;</code>.</li>
+  </ol>
+  <pre><code id="tag"></code></pre>
+
+  <h3>Need more than one button?</h3>
+  <p>Paste the code once, then repeat only the <code>&lt;fuzz-button&gt;</code> tag.</p>
+  <h3>Using a site builder?</h3>
+  <p>Paste it into an Embed or custom code element.</p>
+  <h3>Using React?</h3>
+  <p>Load the script once, then use the tag like any element.</p>
+  <h3>Want the same font?</h3>
+  <p>Add Space Grotesk to your page. Without it, the button uses a system font.</p>
 
   <h2>Good to know</h2>
   <p>It works like a normal button: click, keyboard and touch. Listen for <code>click</code> as usual.</p>
@@ -63,17 +131,82 @@
 
 <script src="fuzz-button.js"></script>
 <script>
-  const copy = document.getElementById("copy");
-  copy.addEventListener("click", async () => {
+  const demo = document.getElementById("demo");
+  const form = document.getElementById("controls");
+  const field = id => document.getElementById(id);
+  const OPEN = "<scr" + "ipt>", CLOSE = "</scr" + "ipt>";
+
+  const attr = value => value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+  function tag() {
+    const a = n => demo.getAttribute(n);
+    return `<fuzz-button label="${attr(a("label"))}" color="${a("color")}" text-color="${a("text-color")}" fuzz="${a("fuzz")}"></fuzz-button>`;
+  }
+
+  function show() { field("tag").textContent = tag(); }
+
+  field("label").addEventListener("input", e => { demo.setAttribute("label", e.target.value.trim() || "Get started"); show(); });
+  field("fuzz").addEventListener("input", e => { demo.setAttribute("fuzz", e.target.value); show(); });
+
+  function pick(name, customId, attribute) {
+    form.querySelectorAll(`input[name="${name}"]`).forEach(radio => radio.addEventListener("change", () => {
+      demo.setAttribute(attribute, radio.value);
+      field(customId).value = radio.value.toLowerCase();
+      show();
+    }));
+    field(customId).addEventListener("input", e => {
+      form.querySelectorAll(`input[name="${name}"]`).forEach(radio => { radio.checked = false; });
+      demo.setAttribute(attribute, e.target.value);
+      show();
+    });
+  }
+  pick("fur", "fur-custom", "color");
+  pick("ink", "ink-custom", "text-color");
+  show();
+
+  const script = () => fetch("fuzz-button.js").then(r => r.text());
+
+  function flash(button, text, rest) {
+    button.textContent = text;
+    setTimeout(() => { button.textContent = rest; }, 2200);
+  }
+
+  field("copy").addEventListener("click", async e => {
     try {
-      const code = await (await fetch("fuzz-button.js")).text();
-      const open = "<scr" + "ipt>", close = "</scr" + "ipt>";
-      await navigator.clipboard.writeText(`<fuzz-button label="Get started"></fuzz-button>\n\n${open}\n${code}${close}\n`);
-      copy.textContent = "Copied";
+      await navigator.clipboard.writeText(`${tag()}\n\n${OPEN}\n${await script()}${CLOSE}\n`);
+      flash(e.target, "Copied", "Copy the code");
     } catch {
-      copy.textContent = "Use Download instead";
+      flash(e.target, "Use Download instead", "Copy the code");
     }
-    setTimeout(() => { copy.textContent = "Copy the code"; }, 2200);
+  });
+
+  field("download").addEventListener("click", async () => {
+    const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuzz Button</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+  html, body { height: 100%; margin: 0; background: #090A0C; }
+  body { display: grid; place-items: center; overflow-x: clip; }
+</style>
+</head>
+<body>
+
+${tag()}
+
+${OPEN}
+${await script()}${CLOSE}
+</body>
+</html>
+`;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([page], { type: "text/html" }));
+    link.download = "fuzz-button.html";
+    link.click();
+    URL.revokeObjectURL(link.href);
   });
 </script>
 </body>

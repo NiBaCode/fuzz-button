@@ -2,10 +2,10 @@
 
 A real HTML button covered in hair. Press it and the pile flattens, release it and it springs back. One file, no libraries, WebGL2.
 
-**Try it:** https://nibacode.github.io/fuzz-button/
+**Make your own:** https://nibacode.github.io/fuzz-button/
 
 ```html
-<fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" width="320" height="110"></fuzz-button>
+<fuzz-button label="Get started" color="#FFB000" text-color="#090A0C" fuzz="1"></fuzz-button>
 <script src="fuzz-button.js"></script>
 ```
 
