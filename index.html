@@ -129,7 +129,7 @@
   <footer>Made by The Notorious RGB. <a href="https://www.instagram.com/thenotorious.rgb/">Follow for the next one</a></footer>
 </main>
 
-<script src="fuzz-button.js"></script>
+<script src="fuzz-button.js?v=2"></script>
 <script>
   const demo = document.getElementById("demo");
   const form = document.getElementById("controls");
@@ -164,7 +164,7 @@
   pick("ink", "ink-custom", "text-color");
   show();
 
-  const script = () => fetch("fuzz-button.js").then(r => r.text());
+  const script = () => fetch("fuzz-button.js?v=2").then(r => r.text());
 
   function flash(button, text, rest) {
     button.textContent = text;
